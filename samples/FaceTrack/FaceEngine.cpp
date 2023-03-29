@@ -24,6 +24,7 @@
 #include "RenderingUtils.h"
 #include <iostream>
 
+#include "DataSender.hpp" // Edited, Add data sender
 
 bool CheckResult(NvCV_Status nvErr, unsigned line) {
   if (NVCV_SUCCESS == nvErr) return true;
@@ -48,6 +49,18 @@ FaceEngine::Err FaceEngine::fitFaceModel(cv::Mat& frame) {
   BAIL_IF_NVERR(nvErr, err, FaceEngine::Err::errRun);
 
   if (getAverageLandmarksConfidence() < confidenceThreshold) return FaceEngine::Err::errRun;
+
+  // Edited, Retrive and send data
+  NvAR_RenderingParams* rendering_params = FaceEngine::getRenderingParams();
+
+  DataSender::get_instance().send_data(
+      rendering_params->translation.vec[0],
+      rendering_params->translation.vec[1],
+      rendering_params->translation.vec[2], // vec[2] is always be 0, so we can't get the distance between head and camera
+      rendering_params->rotation.x,
+      rendering_params->rotation.y,
+      rendering_params->rotation.z,
+      rendering_params->rotation.w);
 
 bail:
   return err;
